@@ -45,10 +45,12 @@ def login():
 
 @app.route('/student_dashboard')
 def student_dashboard():
+    pass
     # Student dashboard logic (already implemented)
 
 @app.route('/lecturer_dashboard')
 def lecturer_dashboard():
+    pass
     # Lecturer dashboard logic (already implemented)
 
 @app.route('/admin_dashboard')
@@ -61,6 +63,8 @@ def notifications():
     user_email = session.get('email')  # Assuming the user's email is stored in the session
     user_notifications = users.get(user_email, {}).get('notifications', [])
     return render_template('notifications.html', notifications=user_notifications)
+pass
+    
 
 
 @app.route('/allocate_supervisor', methods=['POST'])
