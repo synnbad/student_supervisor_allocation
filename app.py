@@ -1,38 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from app import app, users, supervisor_allocation, submitted_projects, project_reviews
+from app import generate_supervisor_notification, generate_project_approval_notification
+from werkzeug.exceptions import abort
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Sample user data (replace with database interactions)
 users = {
-    'student': {'email': 'student@example.com', 'password': 'studentpassword', 'name': 'Student Name', 'notifications': []},
-    'lecturer': {'email': 'lecturer@example.com', 'password': 'lecturerpassword', 'name': 'Lecturer Name', 'notifications': []},
-    'admin': {'email': 'admin@example.com', 'password': 'adminpassword', 'name': 'Admin Name', 'notifications': []}
-}
-
-# Function to generate notifications for supervisor allocation updates
-def generate_supervisor_notification(student_email, supervisor_name):
-    notification_message = f"Your supervisor has been updated. Your new supervisor is {supervisor_name}."
-    users[student_email]['notifications'].append(notification_message)
-
-# Function to generate notifications for project approval/rejection events
-def generate_project_approval_notification(student_email, project_title, approval_status):
-    if approval_status == 'approved':
-        notification_message = f"Congratulations! Your project '{project_title}' has been approved."
-    else:
-        notification_message = f"We regret to inform you that your project '{project_title}' has been rejected."
-    users[student_email]['notifications'].append(notification_message)
-
-# Sample supervisor allocation data (replace with actual data)
-supervisor_allocation = {
-    'student1@example.com': 'Supervisor A',
-    'student2@example.com': 'Supervisor B'
-}
-
-# Sample submitted project works data (replace with actual data)
-submitted_projects = {
-    'student1@example.com': 'Project 1',
-    'student2@example.com': 'Project 2'
+    'student': {'email': 'student@example.com', 'password': 'studentpassword'},
+    'lecturer': {'email': 'lecturer@example.com', 'password': 'lecturerpassword'},
+    'admin': {'email': 'admin@example.com', 'password': 'adminpassword'}
 }
 
 @app.route('/')
@@ -41,21 +19,75 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Login logic (already implemented)
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user_type = request.form['user_type']
+
+        if email == users[user_type]['email'] and password == users[user_type]['password']:
+            # Redirect users to different dashboards based on user type
+            if user_type == 'student':
+                return redirect(url_for('student_dashboard'))
+            elif user_type == 'lecturer':
+                return redirect(url_for('lecturer_dashboard'))
+            elif user_type == 'admin':
+                return redirect(url_for('admin_dashboard'))
+        else:
+            return "Invalid email or password. Please try again."
+    else:
+        return render_template('login.html')
+
 
 @app.route('/student_dashboard')
 def student_dashboard():
-    pass
-    # Student dashboard logic (already implemented)
+    # Check if the user is logged in as a student
+    if 'email' not in session or session['role'] != 'student':
+        # If not logged in or not a student, redirect to the login page
+        return redirect(url_for('login'))
+
+    # Get the email of the logged-in student
+    student_email = session['email']
+
+    # Get the projects submitted by the current student
+    student_projects = submitted_projects.get(student_email, [])
+
+    # Render the student dashboard template with the student's projects
+    return render_template('student_dashboard.html', projects=student_projects)
 
 @app.route('/lecturer_dashboard')
 def lecturer_dashboard():
-    pass
-    # Lecturer dashboard logic (already implemented)
+    # Check if the user is logged in as a lecturer
+    if 'email' not in session or session['role'] != 'lecturer':
+        # If not logged in or not a lecturer, redirect to the login page
+        return redirect(url_for('login'))
+
+    # Get the email of the logged-in lecturer
+    lecturer_email = session['email']
+
+    # Get the students allocated to the current lecturer
+    allocated_students = {student_email: project_title for student_email, project_title in supervisor_allocation.items() if project_title == lecturer_email}
+
+    # Get the projects submitted by the students allocated to the lecturer
+    lecturer_projects = {student_email: submitted_projects.get(student_email) for student_email in allocated_students}
+
+    # Render the lecturer dashboard template with the allocated students and their projects
+    return render_template('lecturer_dashboard.html', students=allocated_students, projects=lecturer_projects)
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
-    # Admin dashboard logic (already implemented)
+    # Check if the user is logged in as an admin
+    if 'email' not in session or session['role'] != 'admin':
+        # If not logged in or not an admin, redirect to the login page
+        return redirect(url_for('login'))
+
+    # Get all allocated students and their supervisors
+    allocated_students = {student_email: supervisor for student_email, supervisor in supervisor_allocation.items()}
+
+    # Get all submitted projects
+    all_projects = submitted_projects
+
+    # Render the admin dashboard template with allocated students and all projects
+    return render_template('admin_dashboard.html', students=allocated_students, projects=all_projects)
 
 @app.route('/notifications')
 def notifications():
@@ -63,61 +95,110 @@ def notifications():
     user_email = session.get('email')  # Assuming the user's email is stored in the session
     user_notifications = users.get(user_email, {}).get('notifications', [])
     return render_template('notifications.html', notifications=user_notifications)
-pass
-    
-
 
 @app.route('/allocate_supervisor', methods=['POST'])
 def allocate_supervisor():
-    # Supervisor allocation logic (already implemented)
-    student_email = request.form['student_email']
-    supervisor_name = request.form['supervisor_name']
-    # Update supervisor allocation data
+    # Check if the user is logged in as an admin
+    if 'email' not in session or session['role'] != 'admin':
+        # If not logged in or not an admin, redirect to the login page
+        flash('You are not authorized to perform this action.', 'error')
+        return redirect(url_for('login'))
+
+    # Get the form data submitted by the user
+    student_email = request.form.get('student_email')
+    supervisor_name = request.form.get('supervisor_name')
+
+    # Update the supervisor allocation data
     supervisor_allocation[student_email] = supervisor_name
-    # Generate supervisor allocation notification
+
+    # Generate a notification for the student
     generate_supervisor_notification(student_email, supervisor_name)
+
+    # Flash a success message
     flash('Supervisor allocated successfully', 'success')
+
+    # Redirect to the admin dashboard
     return redirect(url_for('admin_dashboard'))
+@app.route('/approve_project', methods=['POST'])
+
 
 @app.route('/approve_project', methods=['POST'])
 def approve_project():
-    # Project approval logic (already implemented)
-    student_email = request.form['student_email']
-    project_title = request.form['project_title']
-    # Update project status to approved
-    # (you should replace this with your actual logic)
+    # Check if the user is logged in as an admin
+    if 'email' not in session or session['role'] != 'admin':
+        # If not logged in or not an admin, redirect to the login page
+        flash('You are not authorized to perform this action.', 'error')
+        return redirect(url_for('login'))
+
+    # Get the form data submitted by the user
+    student_email = request.form.get('student_email')
+    project_title = request.form.get('project_title')
+
+    # Update the project status to approved
     submitted_projects[student_email] = project_title
-    # Generate project approval notification
+
+    # Generate a notification for the student
     generate_project_approval_notification(student_email, project_title, 'approved')
+
+    # Flash a success message
     flash('Project approved successfully', 'success')
+
+    # Redirect to the admin dashboard
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/reject_project', methods=['POST'])
 def reject_project():
-    # Project rejection logic (already implemented)
-    student_email = request.form['student_email']
-    project_title = request.form['project_title']
-    # Update project status to rejected
-    # (you should replace this with your actual logic)
+    # Check if the user is logged in as an admin
+    if 'email' not in session or session['role'] != 'admin':
+        # If not logged in or not an admin, redirect to the login page
+        flash('You are not authorized to perform this action.', 'error')
+        return redirect(url_for('login'))
+
+    # Get the form data submitted by the user
+    student_email = request.form.get('student_email')
+    project_title = request.form.get('project_title')
+
+    # Update the project status to rejected
     submitted_projects[student_email] = project_title
-    # Generate project rejection notification
+
+    # Generate a notification for the student
     generate_project_approval_notification(student_email, project_title, 'rejected')
+
+    # Flash a success message
     flash('Project rejected successfully', 'success')
+
+    # Redirect to the admin dashboard
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/search_project', methods=['GET'])
 def search_project():
-    # Search logic (already implemented)
+    # Get the search query from the request
+    query = request.args.get('query', '')
+
+    # Perform the search
+    results = {}
+    for student_email, project_title in submitted_projects.items():
+        if query.lower() in project_title.lower():
+            results[student_email] = project_title
+
+    # Render the search results template
+    return render_template('search_results.html', query=query, results=results)
+
 
 @app.route('/project_details/<title>')
 def project_details(title):
-    # Get project details (you should replace this with your actual logic)
-    project_details = get_project_details(title)
+    # Check if the project exists in the project_details dictionary
+    if title not in project_details:
+        abort(404)  # Project not found, return 404 error
+    
+    # Get the project details
+    details = project_details[title]
     
     # Get existing reviews and ratings for the project
-    project_reviews_data = project_reviews.get(title, {'reviews': [], 'ratings': []})
+    reviews_data = project_reviews.get(title, {'reviews': [], 'ratings': []})
     
-    return render_template('project_details.html', project_details=project_details, project_reviews=project_reviews_data)
+    # Render the project details template
+    return render_template('project_details.html', project_details=details, project_reviews=reviews_data)
 
 @app.route('/profile_edit', methods=['GET', 'POST'])
 def profile_edit():
@@ -160,14 +241,16 @@ def delete_account():
         del users['student']
         flash('Your account has been deleted', 'success')
         return redirect(url_for('index'))
-@app.route('/submit_review', methods=['POST'])
+
 @app.route('/submit_review', methods=['POST'])
 def submit_review():
+    # Review submission logic (already implemented)
+
     # Get data from the form submission
     project_title = request.form.get('project_title')
     review = request.form.get('review')
     rating = int(request.form.get('rating'))  # Convert rating to integer
-    
+     
     # Update project reviews and ratings
     if project_title in project_reviews:
         project_reviews[project_title]['reviews'].append(review)
@@ -178,12 +261,3 @@ def submit_review():
     
     # Redirect to the project details page
     return redirect(url_for('project_details', title=project_title))
-# Dictionary to store project reviews and ratings
-project_reviews = {
-    'Project 1': {'reviews': [], 'ratings': []},
-    'Project 2': {'reviews': [], 'ratings': []}
-}
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
