@@ -6,11 +6,14 @@ from app import app, supervisor_allocation
 @app.route('/allocate_supervisor', methods=['POST'])
 def allocate_supervisor():
     if 'email' not in session or session['role'] != 'admin':
-        flash('You are not authorized to perform this action.', 'error')
         return redirect(url_for('login'))
 
-    # Handle supervisor allocation logic here
-    # For example, retrieve student email and supervisor name from the form and update supervisor_allocation
+    email = request.form['email']
+    supervisor_name = request.form['supervisor_name']
+
+    supervisor_allocation[email] = supervisor_name
+
     return redirect(url_for('admin_dashboard'))
+
 
 # Add other supervisor-related routes if needed
