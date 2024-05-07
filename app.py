@@ -2,7 +2,9 @@
 
 from flask import Flask
 from auth import auth_bp
-from dashboards import student_bp, lecturer_bp, admin_bp
+from student import student_bp
+from lecturer import lecturer_bp
+from admin import admin_bp
 from projects import project_bp
 from notifications import notifications_bp
 

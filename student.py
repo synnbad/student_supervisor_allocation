@@ -1,7 +1,7 @@
 # student.py
 
 from flask import Blueprint
-
+from flask import render_template
 student_bp = Blueprint('student', __name__)
 
 @student_bp.route('/dashboard')
