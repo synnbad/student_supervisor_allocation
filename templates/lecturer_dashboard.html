@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Dashboard</title>
+</head>
+<body>
+    <h2>Welcome to the Lecturer Dashboard</h2>
+    <!-- Inside lecturer_dashboard.html -->
+<a href="{{ url_for('notifications') }}">View Notifications</a>
+    <h3>Search for Project Works</h3>
+    <!-- Search form (already implemented) -->
+    
+    <h3>View Project Details</h3>
+    <ul>
+        {% for student, project in submitted_projects.items() %}
+            <li>
+                <strong>{{ student }}</strong>: <a href="/project_details?student_email={{ student }}">View Details</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
