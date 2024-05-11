@@ -1,20 +1,20 @@
-# admin.py
-
-from flask import render_template, request, redirect, url_for, flash, session
-from app import app, supervisor_allocation, submitted_projects
 from flask import Blueprint
 
-admin_bp = Blueprint('admin', __name__)
+def create_admin_blueprint():
+    admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/')
-def index():
-    if 'email' not in session or session['role'] != 'admin':
-        return redirect(url_for('auth.login'))
+    @admin_bp.route('/admin_dashboard')
+    def admin_dashboard():
+        if 'email' not in session or session['role'] != 'admin':
+            flash('You need to be logged in as an admin to access this page.', 'error')
+            return redirect(url_for('login'))
 
-    allocated_students = supervisor_allocation
-    pending_projects = submitted_projects
+        # Retrieve data needed for the admin dashboard
+        allocated_students = supervisor_allocation
+        all_projects = submitted_projects
 
-    return render_template('admin_dashboard.html', students=allocated_students, projects=pending_projects)
-    return render_template('admin_dashboard.html', students=allocated_students, projects=all_projects)
+        return render_template('admin_dashboard.html', students=allocated_students, projects=all_projects)
 
-# Add other admin-related routes such as user management functionalities
+    # Add other admin-related routes such as user management functionalities
+
+    return admin_bp
