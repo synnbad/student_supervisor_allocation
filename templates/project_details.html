@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details</title>
+</head>
+<body>
+    <h1>{{ project_details.title }}</h1>
+    <p>{{ project_details.description }}</p>
+    
+    <h2>Existing Reviews and Ratings</h2>
+    {% if project_reviews.reviews %}
+        <ul>
+            {% for review, rating in zip(project_reviews.reviews, project_reviews.ratings) %}
+                <li><strong>Rating:</strong> {{ rating }} - {{ review }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No reviews yet.</p>
+    {% endif %}
+    
+    <h2>Submit Your Review</h2>
+    <form action="{{ url_for('submit_review') }}" method="POST">
+        <input type="hidden" name="project_title" value="{{ project_details.title }}">
+        <label for="review">Review:</label><br>
+        <textarea id="review" name="review" rows="4" cols="50"></textarea><br>
+        <label for="rating">Rating (1-5):</label>
+        <input type="number" id="rating" name="rating" min="1" max="5" required><br><br>
+        <input type="submit" value="Submit Review">
+    </form>
+</body>
+</html>
