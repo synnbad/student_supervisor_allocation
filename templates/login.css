@@ -1,4 +1,4 @@
-/* login */
+
 body {
     background-color: #f8f8f8;
     background-image: url("images/background2.jpg");
@@ -44,7 +44,6 @@ body form label {
     width: 70px;
     border: none;
     padding: 0px 0px 0px 0px;
-    background-color: none;
     margin-bottom: 1px;
 }
 body form input {
