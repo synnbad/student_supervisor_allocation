@@ -36,12 +36,18 @@ body>div form h2 {
     color: black;
     font-size: 30px;
     text-align: center;
-    width: 100px;
+    width: 100%;
     border: none;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 80px;
     box-sizing: border-box;
+}
+body>div form div{
+    margin: 0px;
+    padding: 0px;
+    border: none;
+    width: 100%;
 }
 body>div form div label {
     display: block;
