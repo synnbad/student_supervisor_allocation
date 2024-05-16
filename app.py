@@ -24,7 +24,7 @@ def login():
         password = request.form['password']
         user_type = request.form['user_type']
 
-        if email == users[user_type]['email'] and password == users[user_type]['password']:
+        if user_type in users and email == users[user_type]['email'] and password == users[user_type]['password']:
             session['email'] = email
             session['role'] = user_type
             return redirect(url_for(f'{user_type}_dashboard'))
@@ -38,58 +38,41 @@ def login():
 @app.route('/logout')
 def logout():
     # Logout logic here
-    session.clear()
+    session.pop('email', None)
+    session.pop('role', None)
     return redirect(url_for('index'))
 
 # Dashboard route
 @app.route('/dashboard')
 def dashboard():
     # Dashboard logic here
-    if 'email' not in session:
+    role = session.get('role')
+    if role is None:
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
-    role = session.get('role')
-    if role == 'admin':
-        # Admin dashboard logic
-        return render_template('admin_dashboard.html')
-    elif role == 'student':
-        # Student dashboard logic
-        return render_template('student_dashboard.html')
-    elif role == 'lecturer':
-        # Lecturer dashboard logic
-        return render_template('lecturer_dashboard.html')
-    else:
-        flash('Invalid user role!', 'error')
-        return redirect(url_for('index'))
+    return render_template(f'{role}_dashboard.html')
 
 # Route for profile editing
 @app.route('/profile_edit', methods=['GET', 'POST'])
 def profile_edit():
     """Edit user profile."""
-    users = importlib.import_module('app').users  # Import users from app module
     if 'email' not in session:
-        flash('You need to be logged in to access this page.', 'error')
         return redirect(url_for('login'))
 
+    user_email = session['email']
+    users = importlib.import_module('app').users
+
     if request.method == 'POST':
-        email = session['email']
-        name = request.form['name']
-        users[email]['name'] = name
+        users[user_email]['name'] = request.form['name']
         flash('Profile updated successfully', 'success')
         return redirect(url_for('profile_edit'))
-    else:
-        user_email = session['email']
-        return render_template('profile_edit.html', user=users[user_email])
+
+    return render_template('profile_edit.html', user=users[user_email])
 
 # Route for registration
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    # Registration logic here
-    if request.method == 'POST':
-        # Registration logic
-        pass
-    else:
-        return render_template('register.html')
+@app.route('/register', methods=['GET', 'POST'], endpoint='register')
+def register_view():
+    return render_template('register.html', endpoint='register')
 
 # Route for student dashboard
 @app.route('/student/dashboard')
@@ -101,22 +84,25 @@ def student_dashboard():
 @app.route('/student/projects')
 def student_projects():
     """Display projects submitted by the student"""
-    pass
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    email = session['email']
+    return render_template('student_projects.html', projects=submitted_projects.get(email, {}))
 
 # Route for supervisor information
 @app.route('/student/supervisor')
 def supervisor_info():
     """Display assigned supervisor information"""
-    pass
+    if 'email' not in session:
+        return redirect(url_for('login'))
+    email = session['email']
+    return render_template('supervisor_info.html', supervisor=supervisor_allocation.get(email, {}))
 
 # Route for password reset
-@app.route('/reset_password', methods=['GET', 'POST'])
+@app.route('/reset_password', methods=['GET', 'POST'])                                                                                                                                                                        
 def reset_password():
-    if request.method == 'POST':
-        # Password reset logic
-        pass
-    else:
-        return render_template('reset_password.html')
+    return render_template('reset_password.html'), 200
 
 # Route for project submission
 @app.route('/submit_project', methods=['POST'])
@@ -148,8 +134,7 @@ def submit_project():
 # Route for notifications
 @app.route('/notifications')
 def display_notifications():
-    user_notifications = session.get('notifications', [])
-    return render_template('notifications.html', notifications=user_notifications)
+    return render_template('notifications.html', notifications=session.get('notifications', []))
 
 # Route for allocating supervisor
 @app.route('/allocate_supervisor', methods=['POST'])
