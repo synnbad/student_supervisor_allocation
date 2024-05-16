@@ -20,20 +20,28 @@ body h1 {
     width: 100%;
     color: black;
     text-transform: uppercase;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 1020;
 }
 body p {
     margin: auto;
+    margin-top: 100px;
     text-align: justify;
     background-color: #fff;
     padding: 30px;
     opacity: 0.8;
     width: 60%;
+    margin-bottom: 20px;
 }
 body div.container {
     background-color:#3b3b3b;
     margin-bottom: 0px;
+    min-height: 573px;
     border: none;
-    padding: 0px 60px 0px 60px;
+    padding: 40px 60px 0px 60px;
+    opacity: 0.95;
 }
 body div.container h2 {
     color: rgb(3, 3, 82);
@@ -43,7 +51,8 @@ body div.container ul {
     padding: 15px;
     max-width: 700px;
     margin: auto;
-    margin-top: 0px;
+    margin-top: 40px;
+    margin-bottom: 40px;
 }
 body div.container p {
     background-color: #585858;
@@ -65,13 +74,18 @@ body div.container ul li {
     margin-top: 0px;
     margin-bottom: 0px;
 }
+body div.container form label {
+    font-weight: bold;
+}
 body div.container form textarea {
+    margin-top: 20px;
+    margin-bottom: 20px;
     min-height: 140px;
+    max-width: 400px;
 }
 body div.container form .rinput {
     background-color: green;
     height: 40px;
-    margin-bottom: 20px;
 }
 body div.container form .rinput:hover {
     cursor: pointer;
