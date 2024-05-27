@@ -2,27 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="student_dashboard.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='student_dashboard.css') }}">
 </head>
 <body>
     <h2 class="heading1">Welcome to the Student Dashboard</h2>
-    <!-- Inside student_dashboard.html -->
-<a href="{{ url_for('notifications') }}">View Notifications</a>
+    <a href="{{ url_for('display_notifications') }}">View Notifications</a>
     <h3 class="heading2">Submit Final Project</h3>
-    <!-- Form to submit final project (already implemented) -->
-
+    <!-- Form to submit final project -->
     <h3 class="heading3">Search for Project Works</h3>
-    <!-- Search form (already implemented) -->
-    
-    <h3 class="heading4">View Project Details</h3>
-    <ul>
-        {% for student, project in submitted_projects.items() %}
-            <li>
-                <strong>{{ student }}</strong>: <a href="/project_details?student_email={{ student }}">View Details</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <!-- Search form -->
 </body>
 </html>

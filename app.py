@@ -4,7 +4,15 @@ import importlib
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+
+users = {
+    'student': {'email': 'student@example.com', 'password': 'studentpass'},
+    'lecturer': {'email': 'lecturer@example.com', 'password': 'lecturerpass'},
+    'admin': {'email': 'admin@example.com', 'password': 'adminpass'}
+}
 # Defining routes for different functionalities
+
+
 
 # Main page route
 @app.route('/')
@@ -134,7 +142,8 @@ def submit_project():
 # Route for notifications
 @app.route('/notifications')
 def display_notifications():
-    return render_template('notifications.html', notifications=session.get('notifications', []))
+    """Display notifications."""
+    return render_template('notifications.html')
 
 # Route for allocating supervisor
 @app.route('/allocate_supervisor', methods=['POST'])

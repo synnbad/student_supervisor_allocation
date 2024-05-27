@@ -15,7 +15,7 @@ body h2.heading1{
     background-position: center;
     background-size: cover;
 }
-body>a {
+body h2.heading1 span{
     display: block;
     margin-top: 0px;
     background-color: green;
