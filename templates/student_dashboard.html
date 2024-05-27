@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='student_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
 </head>
 <body>
-    <h2 class="heading1">Welcome to the Student Dashboard</h2>
-    <a href="{{ url_for('display_notifications') }}">View Notifications</a>
-    <h3 class="heading2">Submit Final Project</h3>
-    <!-- Form to submit final project -->
-    <h3 class="heading3">Search for Project Works</h3>
-    <!-- Search form -->
+    <div class="container">
+        <h1>Welcome, Student!</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('student_projects') }}">My Projects</a></li>
+                <li><a href="{{ url_for('supervisor_info') }}">Supervisor Information</a></li>
+                <li><a href="{{ url_for('profile_edit') }}">Edit Profile</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </div>
 </body>
 </html>

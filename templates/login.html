@@ -3,35 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
-    <h2>Login</h2>
     <form method="POST" action="{{ url_for('login') }}">
+        <h2>Login</h2>
         <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br>
-
+        <input type="email" id="email" name="email" required>
         <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-
+        <input type="password" id="password" name="password" required>
         <label for="user_type">User Type:</label>
-        <select id="user_type" name="user_type">
+        <select id="user_type" name="user_type" required>
             <option value="student">Student</option>
             <option value="lecturer">Lecturer</option>
             <option value="admin">Admin</option>
-        </select><br>
-
+        </select>
         <button type="submit">Login</button>
+        <a href="{{ url_for('reset_password') }}">Forgot Password?</a>
     </form>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
 </body>
 </html>

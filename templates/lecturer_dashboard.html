@@ -2,24 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecturer Dashboard</title>
-    <link rel="stylesheet" href="lecturer_dashboard.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lecturer.css') }}">
 </head>
 <body>
-    <h2 class="heading1">Welcome to the Lecturer Dashboard</h2>
-    <!-- Inside lecturer_dashboard.html -->
-<a href="{{ url_for('notifications') }}">View Notifications</a>
-    <h3 class="heading2">Search for Project Works</h3>
-    <!-- Search form (already implemented) -->
-    
-    <h3 class="heading3">View Project Details</h3>
-    <ul>
-        {% for student, project in submitted_projects.items() %}
-            <li>
-                <strong>{{ student }}</strong>: <a href="/project_details?student_email={{ student }}">View Details</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="container">
+        <h1>Welcome, Lecturer!</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('assigned_students') }}">Assigned Students</a></li>
+                <li><a href="{{ url_for('review_projects') }}">Review Projects</a></li>
+                <li><a href="{{ url_for('schedule_meeting') }}">Schedule Meeting</a></li>
+                <li><a href="{{ url_for('profile_edit') }}">Edit Profile</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </div>
 </body>
 </html>
