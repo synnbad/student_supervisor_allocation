@@ -7,18 +7,35 @@
 </head>
 <body>
     <form method="POST" action="{{ url_for('login') }}">
-        <h2>Login</h2>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <label for="user_type">User Type:</label>
-        <select id="user_type" name="user_type" required>
-            <option value="student">Student</option>
-            <option value="lecturer">Lecturer</option>
-            <option value="admin">Admin</option>
-        </select>
-        <button type="submit">Login</button>
+        <fieldset>
+            <legend>
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/UHASlogo1.png') }}" alt="Logo" class="logo">
+                </div>
+                <h2>Login</h2>
+            </legend>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="user_type">User Type:</label>
+                <select id="user_type" name="user_type" required>
+                    <option value="student">Student</option>
+                    <option value="lecturer">Lecturer</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <button type="submit">Login</button>
+        </fieldset>
         <a href="{{ url_for('reset_password') }}">Forgot Password?</a>
     </form>
 </body>
