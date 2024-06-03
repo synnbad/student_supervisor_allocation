@@ -1,27 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body>
-    <header>
-        <img src="{{ url_for('static', filename='images/UHASlogo1.png') }}" alt="Logo" class="logo">
-        <h1>Welcome, Admin!</h1>
-    </header>
-    <nav>
-        <ul>
-            <li><a href="{{ url_for('view_users') }}">View Users</a></li>
-            <li><a href="{{ url_for('view_projects') }}">View Projects</a></li>
-            <li><a href="{{ url_for('manage_roles') }}">Manage User Roles</a></li>
-            <li><a href="{{ url_for('display_notifications') }}">View Notifications</a></li>
-            <li><a href="{{ url_for('profile_edit') }}">Edit Profile</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </nav>
     <div class="container">
-        <!-- Additional content can go here -->
+        <header>
+            <h1>Admin Dashboard</h1>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main>
+            <section id="users">
+                <h2>Users</h2>
+                <p>View and manage users in the system.</p>
+                <a href="{{ url_for('view_users') }}" class="btn">View Users</a>
+            </section>
+            <section id="projects">
+                <h2>Projects</h2>
+                <p>View and manage projects.</p>
+                <a href="{{ url_for('manage_projects') }}" class="btn">Manage Projects</a>
+            </section>
+            <section id="supervisors">
+                <h2>Supervisors</h2>
+                <p>Assign students and projects to supervisors.</p>
+                <a href="{{ url_for('manage_supervisors') }}" class="btn">Manage Supervisors</a>
+            </section>
+        </main>
     </div>
 </body>
 </html>

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Welcome, Student!</h1>
+        <h1>Welcome, {{ user['name'] }}!</h1>
         <nav>
             <ul>
                 <li><a href="{{ url_for('student_projects') }}">My Projects</a></li>
