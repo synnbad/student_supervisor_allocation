@@ -53,13 +53,12 @@ def logout():
     session.pop('role', None)
     return redirect(url_for('index'))
 
-#STUDENT DASHBOARD
+# STUDENT DASHBOARD
 @app.route('/student/dashboard')
 def student_dashboard():
     if 'email' not in session or session.get('role') != 'student':
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
-    user_email = session['email']
     return render_template('student_dashboard.html', user=users['student'])
 
 
@@ -100,6 +99,9 @@ def edit_project(project_id):
 def delete_project(project_id):
     if project_id in projects:
         del projects[project_id]
+        flash('Project deleted successfully', 'success')
+    else:
+        flash('Project not found', 'error')
     return redirect(url_for('manage_projects'))
 
 @app.route('/admin/manage_supervisors')
@@ -113,14 +115,11 @@ def profile_edit():
     if 'email' not in session:
         return redirect(url_for('login'))
 
-    user_email = session['email']
     user_role = session.get('role')
-
     if request.method == 'POST':
         users[user_role]['name'] = request.form['name']
         flash('Profile updated successfully', 'success')
         return redirect(url_for('profile_edit'))
-
     return render_template('profile_edit.html', user=users[user_role])
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -130,6 +129,7 @@ def register_view():
         pass
     return render_template('register.html')
 
+# STUDENT PROJECTS ROUTE
 @app.route('/student/projects')
 def student_projects():
     if 'email' not in session or session.get('role') != 'student':
