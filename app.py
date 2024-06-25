@@ -103,25 +103,30 @@ def add_project():
     return render_template('add_project.html')
 
 # EDIT PROJECT ROUTE
-@app.route('/admin/edit_project/<int:project_id>', methods=['GET', 'POST'])
-def edit_project(project_id):
+@app.route('/admin/edit_supervisor/<int:supervisor_id>', methods=['GET', 'POST'])
+def edit_supervisor(supervisor_id):
     if 'email' not in session or session.get('role') != 'admin':
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
-    
-    if project_id not in projects:
-        flash('Project not found', 'error')
-        return redirect(url_for('manage_projects'))
+
+    # Find the supervisor by id
+    supervisor = supervisors.get(supervisor_id)
 
     if request.method == 'POST':
-        projects[project_id] = {
-            'title': request.form['title'],
-            'description': request.form['description']
-        }
-        flash('Project updated successfully', 'success')
-        return redirect(url_for('manage_projects'))
-    return render_template('edit_project.html', project=projects[project_id])
+        # Update supervisor details
+        supervisor['name'] = request.form['name']
+        supervisor['email'] = request.form['email']
+        supervisor['department'] = request.form['department']
+        flash('Supervisor updated successfully', 'success')
+        return redirect(url_for('manage_supervisors'))
 
+    return render_template('edit_supervisor.html', supervisor=supervisor)
+
+# Example data structure for supervisors
+supervisors = {
+    1: {'id': 1, 'name': 'Dr. John Doe', 'email': 'john.doe@university.edu', 'department': 'Computer Science'},
+    2: {'id': 2, 'name': 'Dr. Jane Smith', 'email': 'jane.smith@university.edu', 'department': 'Mathematics'}
+}
 # DELETE PROJECT ROUTE
 @app.route('/admin/delete_project/<int:project_id>')
 def delete_project(project_id):
@@ -142,7 +147,9 @@ def manage_supervisors():
     if 'email' not in session or session.get('role') != 'admin':
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
-    return "Manage Supervisors Page"  # Placeholder content
+    
+    return render_template('manage_supervisors.html', supervisors=supervisors)
+
 
 # PROFILE EDIT ROUTE
 @app.route('/profile_edit', methods=['GET', 'POST'])
@@ -391,26 +398,7 @@ def add_supervisor():
         return redirect(url_for('manage_supervisors'))
     return render_template('add_supervisor.html')
 
-# EDIT SUPERVISOR ROUTE
-@app.route('/admin/edit_supervisor/<int:supervisor_id>', methods=['GET', 'POST'])
-def edit_supervisor(supervisor_id):
-    if 'email' not in session or session.get('role') != 'admin':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
 
-    if supervisor_id not in supervisors:
-        flash('Supervisor not found', 'error')
-        return redirect(url_for('manage_supervisors'))
-
-    if request.method == 'POST':
-        supervisors[supervisor_id] = {
-            'name': request.form['name'],
-            'email': request.form['email'],
-            'department': request.form['department']
-        }
-        flash('Supervisor updated successfully', 'success')
-        return redirect(url_for('manage_supervisors'))
-    return render_template('edit_supervisor.html', supervisor=supervisors[supervisor_id])
 
 # DELETE SUPERVISOR ROUTE
 @app.route('/admin/delete_supervisor/<int:supervisor_id>')
