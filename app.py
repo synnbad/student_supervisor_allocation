@@ -346,7 +346,7 @@ def schedule_meeting():
         description = request.form['description']
 
         # Add the meeting to the meetings list
-        meetings.append({
+        meetings.append({ # type: ignore
             'lecturer': session['email'],
             'student': student_email,
             'date': date,
