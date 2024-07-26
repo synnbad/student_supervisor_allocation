@@ -22,11 +22,11 @@ supervisors = {
     2: {'name': 'Dr. Jones', 'email': 'jones@example.com', 'department': 'Mathematics'}
 }
 
-
 # Initialize projects and supervisor allocation dictionaries
 projects = {}
 submitted_projects = {}
 supervisor_allocation = {}
+meetings = []
 
 # Helper function to check allowed file types
 def allowed_file(filename):
@@ -69,6 +69,38 @@ def student_dashboard():
         return redirect(url_for('login'))
     return render_template('student_dashboard.html', user=users['student'])
 
+fields_of_interest = [
+    'Computer Science',
+    'Mathematics',
+    'Physics',
+    'Biology',
+    'Chemistry',
+    'Engineering'
+]
+
+@app.route('/select_fields', methods=['GET', 'POST'])
+def select_fields():
+    if 'email' not in session or session.get('role') != 'student':
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        selected_fields = request.form.getlist('fields')
+        if len(selected_fields) != 3:
+            flash('You must select exactly three fields of interest.', 'error')
+            return redirect(url_for('select_fields'))
+
+        # Save the student's field selections
+        email = session['email']
+        submitted_projects[email] = {
+            'fields_of_interest': selected_fields
+        }
+
+        flash('Fields of interest submitted successfully.', 'success')
+        return redirect(url_for('student_dashboard'))
+
+    return render_template('select_fields.html', fields=fields_of_interest)
+
 # LECTURER DASHBOARD
 @app.route('/lecturer/dashboard')
 def lecturer_dashboard():
@@ -77,6 +109,11 @@ def lecturer_dashboard():
         return redirect(url_for('login'))
     return render_template('lecturer_dashboard.html', user=users['lecturer'])
 
+@app.route('/lecturer/projects')
+def lecturer_projects():
+    # Add logic to retrieve and display lecturer's projects
+    return render_template('lecturer_projects.html')
+
 # ADMIN DASHBOARD
 @app.route('/admin/dashboard')
 def admin_dashboard():
@@ -84,6 +121,32 @@ def admin_dashboard():
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
     return render_template('admin_dashboard.html', user=users['admin'])
+
+@app.route('/lecturer/select_students', methods=['GET', 'POST'])
+def lecturer_select_students():
+    if 'email' not in session or session.get('role') != 'lecturer':
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+
+    lecturer_email = session['email']
+    lecturer_fields = [field for field, lecturer in supervisors.items() if lecturer['email'] == lecturer_email]
+
+    students_for_lecturer = {email: details for email, details in submitted_projects.items() if any(field in lecturer_fields for field in details['fields_of_interest'])}
+
+    if request.method == 'POST':
+        student_email = request.form['student_email']
+        supervisor_allocation[student_email] = lecturer_email
+        flash('Student assigned successfully.', 'success')
+
+    return render_template('lecturer_select_students.html', students=students_for_lecturer)
+
+@app.route('/view_all_students')
+def view_all_students():
+    if 'email' not in session:
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+
+    return render_template('view_all_students.html', students=submitted_projects, supervisors=supervisor_allocation)
 
 # ADD PROJECT ROUTE
 @app.route('/admin/add_project', methods=['GET', 'POST'])
@@ -102,7 +165,35 @@ def add_project():
         return redirect(url_for('manage_projects'))
     return render_template('add_project.html')
 
-# EDIT PROJECT ROUTE
+# MANAGE PROJECTS ROUTE
+@app.route('/admin/manage_projects')
+def manage_projects():
+    if 'email' not in session or session.get('role') != 'admin':
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+    
+    return render_template('manage_projects.html', projects=projects)
+
+# ADD SUPERVISOR ROUTE
+@app.route('/admin/add_supervisor', methods=['GET', 'POST'])
+def add_supervisor():
+    if 'email' not in session or session.get('role') != 'admin':
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        new_id = max(supervisors.keys(), default=0) + 1
+        supervisors[new_id] = {
+            'name': request.form['name'],
+            'email': request.form['email'],
+            'department': request.form['department']
+        }
+        flash('Supervisor added successfully', 'success')
+        return redirect(url_for('manage_supervisors'))
+    
+    return render_template('add_supervisor.html')
+
+# EDIT SUPERVISOR ROUTE
 @app.route('/admin/edit_supervisor/<int:supervisor_id>', methods=['GET', 'POST'])
 def edit_supervisor(supervisor_id):
     if 'email' not in session or session.get('role') != 'admin':
@@ -122,11 +213,6 @@ def edit_supervisor(supervisor_id):
 
     return render_template('edit_supervisor.html', supervisor=supervisor)
 
-# Example data structure for supervisors
-supervisors = {
-    1: {'id': 1, 'name': 'Dr. John Doe', 'email': 'john.doe@university.edu', 'department': 'Computer Science'},
-    2: {'id': 2, 'name': 'Dr. Jane Smith', 'email': 'jane.smith@university.edu', 'department': 'Mathematics'}
-}
 # DELETE PROJECT ROUTE
 @app.route('/admin/delete_project/<int:project_id>')
 def delete_project(project_id):
@@ -147,9 +233,8 @@ def manage_supervisors():
     if 'email' not in session or session.get('role') != 'admin':
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
-    
-    return render_template('manage_supervisors.html', supervisors=supervisors)
 
+    return render_template('manage_supervisors.html', supervisors=supervisors)
 
 # PROFILE EDIT ROUTE
 @app.route('/profile_edit', methods=['GET', 'POST'])
@@ -252,168 +337,43 @@ def allocate_supervisor():
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
 
-    email = request.form['email']
-    supervisor_name = request.form['supervisor_name']
-    supervisor_allocation[email] = supervisor_name
+    email = request.form['student_email']
+    supervisor_id = int(request.form['supervisor_id'])
 
-    flash('Supervisor allocated successfully', 'success')
+    if email in submitted_projects:
+        supervisor_allocation[email] = supervisors[supervisor_id]
+        flash(f'Supervisor allocated to {email}', 'success')
+    else:
+        flash('Invalid student email', 'error')
     return redirect(url_for('admin_dashboard'))
 
-# LECTURER ASSIGNED STUDENTS ROUTE
-@app.route('/lecturer/assigned_students', methods=['GET', 'POST'])
-def assigned_students():
-    if 'email' not in session or session.get('role') != 'lecturer':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-
-    lecturer_email = session['email']
-
-    if request.method == 'POST':
-        student_email = request.form['student_email']
-        supervisor_allocation[student_email] = lecturer_email
-        flash('Student assigned successfully', 'success')
-
-    # Fetch students assigned to this lecturer
-    students = {email: details for email, details in supervisor_allocation.items() if details == lecturer_email}
-    student_names = {email: users['student']['name'] for email in students}
-
-    return render_template('assigned_students.html', students=student_names, lecturer_email=lecturer_email)
-
-# UNASSIGN STUDENT ROUTE
-@app.route('/lecturer/unassign_student', methods=['POST'])
-def unassign_student():
-    if 'email' not in session or session.get('role') != 'lecturer':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-
-    student_email = request.form['student_email']
-    lecturer_email = session['email']
-
-    if supervisor_allocation.get(student_email) == lecturer_email:
-        del supervisor_allocation[student_email]
-        flash('Student unassigned successfully', 'success')
-    else:
-        flash('Failed to unassign student', 'error')
-
-    return redirect(url_for('assigned_students'))
-
-# LECTURER REVIEW PROJECTS ROUTE
-@app.route('/lecturer/review_projects')
-def review_projects():
-    if 'email' not in session or session.get('role') != 'lecturer':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-    
-    lecturer_email = session['email']
-    projects = {email: project for email, project in submitted_projects.items() if project['supervisor'] == lecturer_email}
-    return render_template('review_projects.html', projects=projects)
-
-# APPROVE PROJECT ROUTE
-@app.route('/approve_project', methods=['POST'])
-def approve_project():
-    if 'email' not in session or session.get('role') != 'lecturer':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-    
-    student_email = request.form['student_email']
-    # Implement the logic to approve the project
-    flash(f'Project from {student_email} approved.', 'success')
-    return redirect(url_for('review_projects'))
-
-# REJECT PROJECT ROUTE
-@app.route('/reject_project', methods=['POST'])
-def reject_project():
-    if 'email' not in session or session.get('role') != 'lecturer':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-    
-    student_email = request.form['student_email']
-    # Implement the logic to reject the project
-    flash(f'Project from {student_email} rejected.', 'success')
-    return redirect(url_for('review_projects'))
-
-# LECTURER SCHEDULE MEETING ROUTE
-@app.route('/lecturer/schedule_meeting', methods=['GET', 'POST'])
-def schedule_meeting():
-    if 'email' not in session or session.get('role') != 'lecturer':
+# ADD MEETING ROUTE
+@app.route('/add_meeting', methods=['GET', 'POST'])
+def add_meeting():
+    if 'email' not in session or session.get('role') != 'student':
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        student_email = request.form['student_email']
-        date = request.form['date']
-        time = request.form['time']
-        description = request.form['description']
-
-        # Add the meeting to the meetings list
-        meetings.append({ # type: ignore
-            'lecturer': session['email'],
-            'student': student_email,
-            'date': date,
-            'time': time,
-            'description': description
-        })
-
-        flash('Meeting scheduled successfully', 'success')
-        return redirect(url_for('schedule_meeting'))
-    return render_template('schedule_meeting.html')
-
-# ADMIN VIEW USERS ROUTE
-@app.route('/admin/view_users')
-def view_users():
-    if 'email' not in session or session.get('role') != 'admin':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-    
-    # Assuming you have a dictionary 'users' containing user data
-    all_users = users  # Or fetch from your database
-    return render_template('view_users.html', users=all_users)
-
-# ADMIN MANAGE PROJECTS ROUTE
-@app.route('/admin/manage_projects')
-def manage_projects():
-    if 'email' not in session or session.get('role') != 'admin':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-    
-    return render_template('manage_projects.html', projects=projects)
-
-
-
-# ADD SUPERVISOR ROUTE
-@app.route('/admin/add_supervisor', methods=['GET', 'POST'])
-def add_supervisor():
-    if 'email' not in session or session.get('role') != 'admin':
-        flash('You need to login first!', 'error')
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        new_id = max(supervisors.keys(), default=0) + 1
-        supervisors[new_id] = {
-            'name': request.form['name'],
-            'email': request.form['email'],
-            'department': request.form['department']
+        meeting = {
+            'title': request.form['title'],
+            'description': request.form['description'],
+            'date': request.form['date']
         }
-        flash('Supervisor added successfully', 'success')
-        return redirect(url_for('manage_supervisors'))
-    return render_template('add_supervisor.html')
+        meetings.append(meeting)
+        flash('Meeting added successfully', 'success')
+        return redirect(url_for('view_meetings'))
+    
+    return render_template('add_meeting.html')
 
-
-
-# DELETE SUPERVISOR ROUTE
-@app.route('/admin/delete_supervisor/<int:supervisor_id>')
-def delete_supervisor(supervisor_id):
-    if 'email' not in session or session.get('role') != 'admin':
+# VIEW MEETINGS ROUTE
+@app.route('/view_meetings')
+def view_meetings():
+    if 'email' not in session or session.get('role') != 'student':
         flash('You need to login first!', 'error')
         return redirect(url_for('login'))
-
-    if supervisor_id in supervisors:
-        del supervisors[supervisor_id]
-        flash('Supervisor deleted successfully', 'success')
-    else:
-        flash('Supervisor not found', 'error')
-    return redirect(url_for('manage_supervisors'))
-
+    
+    return render_template('view_meetings.html', meetings=meetings)
 
 if __name__ == '__main__':
     app.run(debug=True)

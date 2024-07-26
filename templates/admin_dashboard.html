@@ -20,17 +20,22 @@
             <section id="users">
                 <h2>Users</h2>
                 <p>View and manage users in the system.</p>
-                <a href="{{ url_for('view_users') }}" class="btn">View Users</a>
+                <a href="{{ url_for('view_meetings') }}" class="btn">View Users</a> <!-- Updated URL here -->
             </section>
             <section id="projects">
                 <h2>Projects</h2>
                 <p>View and manage projects.</p>
-                <a href="{{ url_for('manage_projects') }}" class="btn">Manage Projects</a>
+                <a href="{{ url_for('add_project') }}" class="btn">Manage Projects</a> <!-- Updated URL here -->
             </section>
             <section id="supervisors">
                 <h2>Supervisors</h2>
                 <p>Assign students and projects to supervisors.</p>
                 <a href="{{ url_for('manage_supervisors') }}" class="btn">Manage Supervisors</a>
+            </section>
+            <section id="students">
+                <h2>View All Students</h2>
+                <p>View all students and their projects with assigned supervisors.</p>
+                <a href="{{ url_for('view_all_students') }}" class="btn">View Students</a>
             </section>
         </main>
     </div>
