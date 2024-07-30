@@ -193,6 +193,32 @@ def add_supervisor():
     
     return render_template('add_supervisor.html')
 
+# DELETE SUPERVISOR ROUTE
+@app.route('/admin/delete_supervisor/<int:supervisor_id>', methods=['POST'])
+def delete_supervisor(supervisor_id):
+    if 'email' not in session or session.get('role') != 'admin':
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+
+    if supervisor_id in supervisors:
+        del supervisors[supervisor_id]
+        flash('Supervisor deleted successfully', 'success')
+    else:
+        flash('Supervisor not found', 'error')
+    return redirect(url_for('manage_supervisors'))
+
+@app.route('/admin/view_users')
+def view_users():
+    if 'email' not in session or session.get('role') != 'admin':
+        flash('You need to login first!', 'error')
+        return redirect(url_for('login'))
+    
+    # Add logic to fetch and display users
+    users = users()
+    return render_template('view_users.html', users=users)
+
+
+
 # EDIT SUPERVISOR ROUTE
 @app.route('/admin/edit_supervisor/<int:supervisor_id>', methods=['GET', 'POST'])
 def edit_supervisor(supervisor_id):
